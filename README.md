@@ -117,6 +117,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - `yc` CLI utility was installed and configured.
 - Installation and deployment scripts are created.
 - The command to create a VM was added to the readme file.
+- The metadata file that deploys the application on VM instance creation was created.
 
 
 Related Yandex Cloud documentation:
@@ -151,16 +152,16 @@ $ yc compute instance create \
 
 The created host's IP address and port:
 ```
-testapp_IP = 84.252.130.18
+testapp_IP = 178.154.224.203
 testapp_port = 9292
 ```
 
 Install dependencies and deploy the application:
 ```
-$ scp *.sh yc-user@84.252.130.18:/home/yc-user
+$ scp *.sh yc-user@178.154.224.203:/home/yc-user
 ...
 
-$ ssh yc-user@84.252.130.18
+$ ssh yc-user@178.154.224.203
 Welcome to Ubuntu 16.04.7 LTS (GNU/Linux 4.4.0-142-generic x86_64)
 ...
 
@@ -185,3 +186,18 @@ yc-user@reddit-app:~$ sudo systemctl status mongod
 yc-user@reddit-app:~$ ./deploy.sh
 ...
 ```
+
+Create a new VM instance providing metadata that deploys the application:
+```
+$ yc compute instance create \
+  --name reddit-app \
+  --hostname reddit-app \
+  --memory=4 \
+  --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-1604-lts,size=10GB \
+  --network-interface subnet-name=default-ru-central1-a,nat-ip-version=ipv4 \
+  --metadata serial-port-enable=1 \
+  --metadata-from-file user-data=metadata.yaml
+...
+```
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
