@@ -80,7 +80,7 @@ Host someinternalhost
 
 Install and setup Pritunl:
 ```
-$ scp setupvpn.sh bastion:/home/appuser
+$ scp VPN/setupvpn.sh bastion:/home/appuser
 
 $ ssh bastion
 Welcome to Ubuntu 20.04.2 LTS (GNU/Linux 5.4.0-42-generic x86_64)
