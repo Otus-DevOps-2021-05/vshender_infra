@@ -158,7 +158,7 @@ testapp_port = 9292
 
 Install dependencies and deploy the application:
 ```
-$ scp *.sh yc-user@178.154.224.203:/home/yc-user
+$ scp config-scripts/*.sh yc-user@178.154.224.203:/home/yc-user
 ...
 
 $ ssh yc-user@178.154.224.203
@@ -196,7 +196,7 @@ $ yc compute instance create \
   --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-1604-lts,size=10GB \
   --network-interface subnet-name=default-ru-central1-a,nat-ip-version=ipv4 \
   --metadata serial-port-enable=1 \
-  --metadata-from-file user-data=metadata.yaml
+  --metadata-from-file user-data=config-scripts/metadata.yaml
 ...
 ```
 
