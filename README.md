@@ -80,7 +80,7 @@ Host someinternalhost
 
 Install and setup Pritunl:
 ```
-$ scp setupvpn.sh bastion:/home/appuser
+$ scp VPN/setupvpn.sh bastion:/home/appuser
 
 $ ssh bastion
 Welcome to Ubuntu 20.04.2 LTS (GNU/Linux 5.4.0-42-generic x86_64)
@@ -108,5 +108,96 @@ Pritunl user:
 See [Connecting to a Pritunl vpn server](https://docs.pritunl.com/docs/connecting) for instructions.
 
 To setup Let's Encrypt for Pritunl admin panel just enter "130-193-53-59.sslip.io" in "Settings -> Lets Encrypt Domain".
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
+
+
+## Homework #6: cloud-testapp
+
+- `yc` CLI utility was installed and configured.
+- Installation and deployment scripts are created.
+- The command to create a VM was added to the readme file.
+- The metadata file that deploys the application on VM instance creation was created.
+
+
+Related Yandex Cloud documentation:
+
+- [Install CLI](https://cloud.yandex.ru/docs/cli/operations/install-cli)
+- [Profile Create](https://cloud.yandex.ru/docs/cli/operations/profile/profile-create)
+
+Check `yc` configuration:
+```
+$ yc config list
+token: ...
+cloud-id: ...
+folder-id: ...
+compute-default-zone: ru-central1-a
+
+$ yc config profile list
+default ACTIVE
+```
+
+Create a new VM instance:
+```
+$ yc compute instance create \
+  --name reddit-app \
+  --hostname reddit-app \
+  --memory=4 \
+  --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-1604-lts,size=10GB \
+  --network-interface subnet-name=default-ru-central1-a,nat-ip-version=ipv4 \
+  --metadata serial-port-enable=1 \
+  --ssh-key ~/.ssh/appuser.pub
+...
+```
+
+The created host's IP address and port:
+```
+testapp_IP = 178.154.224.203
+testapp_port = 9292
+```
+
+Install dependencies and deploy the application:
+```
+$ scp *.sh yc-user@178.154.224.203:/home/yc-user
+...
+
+$ ssh yc-user@178.154.224.203
+Welcome to Ubuntu 16.04.7 LTS (GNU/Linux 4.4.0-142-generic x86_64)
+...
+
+yc-user@reddit-app:~$ ./install_ruby.sh
+...
+
+yc-user@reddit-app:~$ ruby -v
+ruby 2.3.1p112 (2016-04-26) [x86_64-linux-gnu]
+
+yc-user@reddit-app:~$ bundler -v
+Bundler version 1.11.2
+
+yc-user@reddit-app:~$ ./install_mongodb.sh
+...
+
+yc-user@reddit-app:~$ sudo systemctl status mongod
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/lib/systemd/system/mongod.service; enabled; vendor preset: enabled)
+   Active: active (running) since Mon 2021-07-12 17:01:24 UTC; 12s ago
+...
+
+yc-user@reddit-app:~$ ./deploy.sh
+...
+```
+
+Create a new VM instance providing metadata that deploys the application:
+```
+$ yc compute instance create \
+  --name reddit-app \
+  --hostname reddit-app \
+  --memory=4 \
+  --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-1604-lts,size=10GB \
+  --network-interface subnet-name=default-ru-central1-a,nat-ip-version=ipv4 \
+  --metadata serial-port-enable=1 \
+  --metadata-from-file user-data=metadata.yaml
+...
+```
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
