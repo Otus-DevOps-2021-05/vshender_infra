@@ -206,6 +206,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 ## Homework #7: packer-base
 
 - A service account in Yandex Cloud was created and configured.
+- A packer template for testapp base image is added.
 
 Create a Yandex Cloud service account, grant it access to the folder, and generate an IAM key:
 ```
@@ -231,4 +232,55 @@ id: ajeqipnvev31urbod1dv
 service_account_id: ajeg1tbs3ho02l5u4tg0
 created_at: "2021-07-13T09:56:23.667310740Z"
 key_algorithm: RSA_2048
+```
+
+Build a testapp base image:
+```
+$ cd packer
+
+$ packer validate ./ubuntu16.json
+
+$ packer build ./ubuntu16.json
+
+$ yc compute image list
+yandex: output will be in this color.
+
+==> yandex: Creating temporary ssh key for instance...
+==> yandex: Using as source image: fd869u2laf181s38k2cr (name: "ubuntu-1604-lts-1612430962", family: "ubuntu-1604-lts")
+==> yandex: Creating network...
+==> yandex: Creating subnet in zone "ru-central1-a"...
+==> yandex: Creating disk...
+==> yandex: Creating instance...
+==> yandex: Waiting for instance with id fhmisb58df44oorun9s9 to become active...
+    yandex: Detected instance IP: 178.154.227.237
+==> yandex: Using SSH communicator to connect: 178.154.227.237
+==> yandex: Waiting for SSH to become available...
+==> yandex: Connected to SSH!
+==> yandex: Provisioning with shell script: scripts/install_ruby.sh
+...
+==> yandex: Stopping instance...
+==> yandex: Deleting instance...
+    yandex: Instance has been deleted!
+==> yandex: Creating image: reddit-base-1626203343
+==> yandex: Waiting for image to complete...
+==> yandex: Success image create...
+==> yandex: Destroying subnet...
+    yandex: Subnet has been deleted!
+==> yandex: Destroying network...
+    yandex: Network has been deleted!
+==> yandex: Destroying boot disk...
+    yandex: Disk has been deleted!
+Build 'yandex' finished after 4 minutes 52 seconds.
+
+==> Wait completed after 4 minutes 52 seconds
+
+==> Builds finished. The artifacts of successful builds are:
+--> yandex: A disk image was created: reddit-base-1626203343 (id: fd8odftu99akenf9npl8) with family name reddit-base
+
+$ yc compute image list
++----------------------+------------------------+-------------+----------------------+--------+
+|          ID          |          NAME          |   FAMILY    |     PRODUCT IDS      | STATUS |
++----------------------+------------------------+-------------+----------------------+--------+
+| fd8odftu99akenf9npl8 | reddit-base-1626203343 | reddit-base | f2el9g14ih63bjul3ed3 | READY  |
++----------------------+------------------------+-------------+----------------------+--------+
 ```
