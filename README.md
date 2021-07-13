@@ -148,6 +148,13 @@ $ yc compute instance create \
   --metadata serial-port-enable=1 \
   --ssh-key ~/.ssh/appuser.pub
 ...
+
+$ yc compute instance list
++----------------------+------------+---------------+---------+-----------------+-------------+
+|          ID          |    NAME    |    ZONE ID    | STATUS  |   EXTERNAL IP   | INTERNAL IP |
++----------------------+------------+---------------+---------+-----------------+-------------+
+| epd5qtknrril3ndlhsrf | reddit-app | ru-central1-a | RUNNING | 178.154.224.203 | 10.129.0.34 |
++----------------------+------------+---------------+---------+-----------------+-------------+
 ```
 
 The created host's IP address and port:
@@ -207,6 +214,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 
 - A service account in Yandex Cloud was created and configured.
 - A packer template for testapp base image is added.
+- The packer template for testapp base image is parameterized.
 
 Create a Yandex Cloud service account, grant it access to the folder, and generate an IAM key:
 ```
@@ -283,4 +291,10 @@ $ yc compute image list
 +----------------------+------------------------+-------------+----------------------+--------+
 | fd8odftu99akenf9npl8 | reddit-base-1626203343 | reddit-base | f2el9g14ih63bjul3ed3 | READY  |
 +----------------------+------------------------+-------------+----------------------+--------+
+```
+
+Build a testapp base image using parameterized template:
+```
+$ packer build -var-file=variables.json ./ubuntu16.json
+...
 ```
