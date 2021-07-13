@@ -201,3 +201,34 @@ $ yc compute instance create \
 ```
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
+
+
+## Homework #7: packer-base
+
+- A service account in Yandex Cloud was created and configured.
+
+Create a Yandex Cloud service account, grant it access to the folder, and generate an IAM key:
+```
+$ SVC_ACCOUNT=svc
+
+$ FOLDER_ID=$(yc config list | grep ^folder-id | awk '{ print $2 }')
+
+$ yc iam service-account create --name $SVC_ACCOUNT --folder-id $FOLDER_ID
+id: ajeg1tbs3ho02l5u4tg0
+folder_id: b1gd4td7jk7gdlac0laf
+created_at: "2021-07-13T09:50:41.522298119Z"
+name: svc
+
+$ ACCOUNT_ID=$(yc iam service-account get $SVC_ACCOUNT | grep ^id | awk '{ print $2 }')
+
+$ yc resource-manager folder add-access-binding --id $FOLDER_ID \
+    --role editor \
+    --service-account-id $ACCOUNT_ID
+done (1s)
+
+$ yc iam key create --service-account-id $ACCOUNT_ID --output yc-svc-key.json
+id: ajeqipnvev31urbod1dv
+service_account_id: ajeg1tbs3ho02l5u4tg0
+created_at: "2021-07-13T09:56:23.667310740Z"
+key_algorithm: RSA_2048
+```
