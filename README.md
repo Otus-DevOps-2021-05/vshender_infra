@@ -215,6 +215,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - A service account in Yandex Cloud was created and configured.
 - A packer template for testapp base image is added.
 - The packer template for testapp base image is parameterized.
+- A packer template for testapp full image is added.
 
 Create a Yandex Cloud service account, grant it access to the folder, and generate an IAM key:
 ```
@@ -298,3 +299,17 @@ Build a testapp base image using parameterized template:
 $ packer build -var-file=variables.json ./ubuntu16.json
 ...
 ```
+
+Build a testapp full image:
+```
+$ packer build -var-file=variables.json ./immutable.json
+...
+```
+
+Create a VM instance using a full image:
+```
+$ ../config-scripts/create-reddit-vm.sh
+...
+```
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
