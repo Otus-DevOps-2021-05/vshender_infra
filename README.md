@@ -21,6 +21,8 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - Connection to `someinternalhost` via VPN was configured (based on Pritunl).
 - SSL certificate was configured using Let's Encrypt.
 
+<details><summary>Details</summary>
+
 Host IP addresses:
 ```
 bastion_IP = 130.193.53.59
@@ -109,6 +111,8 @@ See [Connecting to a Pritunl vpn server](https://docs.pritunl.com/docs/connectin
 
 To setup Let's Encrypt for Pritunl admin panel just enter "130-193-53-59.sslip.io" in "Settings -> Lets Encrypt Domain".
 
+</details>
+
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
 
 
@@ -119,6 +123,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The command to create a VM was added to the readme file.
 - The metadata file that deploys the application on VM instance creation was created.
 
+<details><summary>Details</summary>
 
 Related Yandex Cloud documentation:
 
@@ -207,6 +212,8 @@ $ yc compute instance create \
 ...
 ```
 
+</details>
+
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
 
 
@@ -216,6 +223,8 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - A packer template for testapp base image is added.
 - The packer template for testapp base image is parameterized.
 - A packer template for testapp full image is added.
+
+<details><summary>Details</summary>
 
 Create a Yandex Cloud service account, grant it access to the folder, and generate an IAM key:
 ```
@@ -311,5 +320,7 @@ Create a VM instance using a full image:
 $ ../config-scripts/create-reddit-vm.sh
 ...
 ```
+
+</details>
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
