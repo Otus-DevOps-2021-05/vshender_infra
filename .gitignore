@@ -1,3 +1,5 @@
 *~
 \#*\#
 .envrc
+yc-svc-key.json
+packer/variables.json
