@@ -333,6 +333,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The provisioners for the application deployment were added.
 - Input variables were used for the configuration.
 - The network load balancer was created.
+- The second VM instance was created.
 
 <details><summary>Details</summary>
 
@@ -551,4 +552,82 @@ lb_ip_address = 84.201.158.38
 
 Open http://84.201.158.38/ and check the application.
 
+Add a second VM instance:
+```
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+yandex_compute_instance.app: Refreshing state... [id=fhmeo4rot527qnsssigv]
+yandex_lb_target_group.app_lb_target_group: Refreshing state... [id=enpint9vuufj268oe7q3]
+yandex_lb_network_load_balancer.app_lb: Refreshing state... [id=b7ruppfn9ugmq564gonm]
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.app2 will be created
+  + resource "yandex_compute_instance" "app2" {
+      ...
+    }
+
+  # yandex_lb_target_group.app_lb_target_group will be updated in-place
+  ~ resource "yandex_lb_target_group" "app_lb_target_group" {
+        created_at = "2021-07-18T13:58:38Z"
+        folder_id  = "b1gd4td7jk7gdlac0laf"
+        id         = "enpint9vuufj268oe7q3"
+        labels     = {}
+        name       = "app-lb-target-group"
+        region_id  = "ru-central1"
+
+        target {
+            address   = "10.128.0.18"
+            subnet_id = "e9b4gc5qqhfpoe63kt9p"
+        }
+      + target {
+          + address   = (known after apply)
+          + subnet_id = "e9b4gc5qqhfpoe63kt9p"
+        }
+    }
+
+Plan: 1 to add, 1 to change, 0 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+
+$ terraform apply -auto-approve
+yandex_compute_instance.app: Refreshing state... [id=fhmeo4rot527qnsssigv]
+yandex_lb_target_group.app_lb_target_group: Refreshing state... [id=enpint9vuufj268oe7q3]
+yandex_lb_network_load_balancer.app_lb: Refreshing state... [id=b7ruppfn9ugmq564gonm]
+yandex_compute_instance.app2: Creating...
+yandex_compute_instance.app2: Still creating... [10s elapsed]
+yandex_compute_instance.app2: Still creating... [20s elapsed]
+yandex_compute_instance.app2: Still creating... [30s elapsed]
+yandex_compute_instance.app2: Still creating... [40s elapsed]
+yandex_compute_instance.app2: Provisioning with 'file'...
+yandex_compute_instance.app2: Still creating... [50s elapsed]
+yandex_compute_instance.app2: Still creating... [1m0s elapsed]
+yandex_compute_instance.app2: Provisioning with 'remote-exec'...
+...
+yandex_compute_instance.app2: Creation complete after 1m48s [id=fhmsgrkurrkqena67in5]
+yandex_lb_target_group.app_lb_target_group: Modifying... [id=enpint9vuufj268oe7q3]
+yandex_lb_target_group.app_lb_target_group: Modifications complete after 7s [id=enpint9vuufj268oe7q3]
+
+Apply complete! Resources: 1 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.240.24
+external_ip_address_app2 = 84.201.175.185
+lb_ip_address = 84.201.158.38
+```
 </details>
