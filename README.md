@@ -324,3 +324,105 @@ $ ../config-scripts/create-reddit-vm.sh
 </details>
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
+
+
+## Homework #8: terraform-1
+
+- The VM isntance was created using Terraform.
+
+<details><summary>Details</summary>
+
+[Yandex.Cloud provider documentation](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs)
+
+Get config for yandex provider:
+```
+$ yc config list
+token: ...
+cloud-id: ...
+folder-id: ...
+compute-default-zone: ru-central1-a
+```
+
+Initialize provider plugins:
+```
+$ cd terraform
+
+$ terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "yandex" (terraform-providers/yandex) 0.35.0...
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+```
+
+See execution plan, showing what actions Terraform would take to apply the current configuration:
+```
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.app will be created
+  + resource "yandex_compute_instance" "app" {
+  ...
+  }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+```
+
+Create a VM instance using terraform:
+```
+$ terraform apply -auto-approve
+yandex_compute_instance.app: Creating...
+yandex_compute_instance.app: Still creating... [10s elapsed]
+yandex_compute_instance.app: Still creating... [20s elapsed]
+yandex_compute_instance.app: Still creating... [30s elapsed]
+yandex_compute_instance.app: Still creating... [40s elapsed]
+yandex_compute_instance.app: Creation complete after 42s [id=fhmcpqriqgm182kto33a]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+$ ls
+main.tf                  terraform.tfstate        terraform.tfstate.backup
+```
+
+Get an external IP address of the created VM using `terraform show` command:
+```
+$ terraform show | grep nat_ip_address
+          nat_ip_address = "178.154.252.33"
+```
+
+Connect to the created VM:
+```
+$ ssh ubuntu@178.154.252.33
+Welcome to Ubuntu 16.04.7 LTS (GNU/Linux 4.4.0-142-generic x86_64)
+...
+```
+
+</details>
