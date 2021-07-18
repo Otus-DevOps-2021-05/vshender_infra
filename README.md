@@ -332,6 +332,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The output variable for an external IP address was added.
 - The provisioners for the application deployment were added.
 - Input variables were used for the configuration.
+- The network load balancer was created.
 
 <details><summary>Details</summary>
 
@@ -529,5 +530,25 @@ Outputs:
 
 external_ip_address_app = 178.154.240.24
 ```
+
+Add a network load balancer (see [yandex_lb_network_load_balancer](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/lb_network_load_balancer) and [yandex_lb_target_group](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/lb_target_group)):
+```
+$ terraform apply -auto-approve
+yandex_compute_instance.app: Refreshing state... [id=fhmeo4rot527qnsssigv]
+yandex_lb_target_group.app_lb_target_group: Creating...
+yandex_lb_target_group.app_lb_target_group: Creation complete after 3s [id=enpint9vuufj268oe7q3]
+yandex_lb_network_load_balancer.app_lb: Creating...
+yandex_lb_network_load_balancer.app_lb: Still creating... [10s elapsed]
+yandex_lb_network_load_balancer.app_lb: Creation complete after 18s [id=b7ruppfn9ugmq564gonm]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.240.24
+lb_ip_address = 84.201.158.38
+```
+
+Open http://84.201.158.38/ and check the application.
 
 </details>
