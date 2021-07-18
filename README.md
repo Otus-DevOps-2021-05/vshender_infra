@@ -330,6 +330,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 
 - The VM isntance was created using Terraform.
 - The output variable for an external IP address was added.
+- The provisioners for the application deployment were added.
 
 <details><summary>Details</summary>
 
@@ -441,5 +442,73 @@ external_ip_address_app = 178.154.252.33
 $ terraform output external_ip_address_app
 178.154.252.33
 ```
+
+Add [provisioners](https://www.terraform.io/docs/language/resources/provisioners/syntax.html) for the application deployment and recreate the VM:
+```
+$ terraform taint yandex_compute_instance.app
+Resource instance yandex_compute_instance.app has been marked as tainted.
+
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+yandex_compute_instance.app: Refreshing state... [id=fhmmi8jnaat1655k0ljq]
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.app is tainted, so must be replaced
+-/+ resource "yandex_compute_instance" "app" {
+      ...
+    }
+
+Plan: 1 to add, 0 to change, 1 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+
+$ terraform apply -auto-approve
+yandex_compute_instance.app: Refreshing state... [id=fhmbgbhkre7lfu7mcdl2]
+yandex_compute_instance.app: Destroying... [id=fhmbgbhkre7lfu7mcdl2]
+yandex_compute_instance.app: Still destroying... [id=fhmbgbhkre7lfu7mcdl2, 10s elapsed]
+yandex_compute_instance.app: Destruction complete after 10s
+yandex_compute_instance.app: Creating...
+yandex_compute_instance.app: Still creating... [10s elapsed]
+yandex_compute_instance.app: Still creating... [21s elapsed]
+yandex_compute_instance.app: Still creating... [31s elapsed]
+yandex_compute_instance.app: Still creating... [41s elapsed]
+yandex_compute_instance.app: Provisioning with 'file'...
+yandex_compute_instance.app: Still creating... [51s elapsed]
+yandex_compute_instance.app: Still creating... [1m1s elapsed]
+yandex_compute_instance.app: Provisioning with 'remote-exec'...
+yandex_compute_instance.app (remote-exec): Connecting to remote host via SSH...
+yandex_compute_instance.app (remote-exec):   Host: 178.154.240.24
+yandex_compute_instance.app (remote-exec):   User: ubuntu
+yandex_compute_instance.app (remote-exec):   Password: false
+yandex_compute_instance.app (remote-exec):   Private key: true
+yandex_compute_instance.app (remote-exec):   Certificate: false
+yandex_compute_instance.app (remote-exec):   SSH Agent: false
+yandex_compute_instance.app (remote-exec):   Checking Host Key: false
+yandex_compute_instance.app (remote-exec): Connected!
+...
+yandex_compute_instance.app: Creation complete after 1m46s [id=fhmk1922pqdne0hd2ghg]
+
+Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.240.24
+```
+
+Open http://178.154.240.24:9292/ and check the application.
 
 </details>
