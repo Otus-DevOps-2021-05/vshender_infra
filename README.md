@@ -329,6 +329,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 ## Homework #8: terraform-1
 
 - The VM isntance was created using Terraform.
+- The output variable for an external IP address was added.
 
 <details><summary>Details</summary>
 
@@ -423,6 +424,22 @@ Connect to the created VM:
 $ ssh ubuntu@178.154.252.33
 Welcome to Ubuntu 16.04.7 LTS (GNU/Linux 4.4.0-142-generic x86_64)
 ...
+```
+
+Add the `external_ip_address_app` output variable and refresh the state:
+```
+$ terraform refresh
+yandex_compute_instance.app: Refreshing state... [id=fhmmi8jnaat1655k0ljq]
+
+Outputs:
+
+external_ip_address_app = 178.154.252.33
+
+$ terraform output
+external_ip_address_app = 178.154.252.33
+
+$ terraform output external_ip_address_app
+178.154.252.33
 ```
 
 </details>
