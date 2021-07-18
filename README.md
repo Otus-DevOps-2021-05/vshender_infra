@@ -331,6 +331,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The VM isntance was created using Terraform.
 - The output variable for an external IP address was added.
 - The provisioners for the application deployment were added.
+- Input variables were used for the configuration.
 
 <details><summary>Details</summary>
 
@@ -510,5 +511,23 @@ external_ip_address_app = 178.154.240.24
 ```
 
 Open http://178.154.240.24:9292/ and check the application.
+
+Use input variables for the configuration and recreate the VM:
+```
+$ terraform destroy -auto-approve
+yandex_compute_instance.app: Refreshing state... [id=fhmk1922pqdne0hd2ghg]
+yandex_compute_instance.app: Destroying... [id=fhmk1922pqdne0hd2ghg]
+yandex_compute_instance.app: Destruction complete after 9s
+
+Destroy complete! Resources: 1 destroyed.
+
+$ terraform apply -auto-approve
+...
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.240.24
+```
 
 </details>
