@@ -334,6 +334,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - Input variables were used for the configuration.
 - The network load balancer was created.
 - The second VM instance was created.
+- The `count` parameter was used in order to create two app instances.
 
 <details><summary>Details</summary>
 
@@ -630,4 +631,44 @@ external_ip_address_app = 178.154.240.24
 external_ip_address_app2 = 84.201.175.185
 lb_ip_address = 84.201.158.38
 ```
+
+Use the `count` parameter to create app instances (see [dynamic Blocks](https://www.terraform.io/docs/language/expressions/dynamic-blocks.html)):
+```
+$ terraform apply -auto-approve
+yandex_compute_instance.app2: Refreshing state... [id=fhmsgrkurrkqena67in5]
+yandex_compute_instance.app[0]: Refreshing state... [id=fhmeo4rot527qnsssigv]
+yandex_lb_target_group.app_lb_target_group: Refreshing state... [id=enpint9vuufj268oe7q3]
+yandex_lb_network_load_balancer.app_lb: Refreshing state... [id=b7ruppfn9ugmq564gonm]
+yandex_compute_instance.app2: Destroying... [id=fhmsgrkurrkqena67in5]
+yandex_compute_instance.app[1]: Creating...
+yandex_compute_instance.app[0]: Modifying... [id=fhmeo4rot527qnsssigv]
+yandex_compute_instance.app[0]: Modifications complete after 3s [id=fhmeo4rot527qnsssigv]
+yandex_compute_instance.app2: Still destroying... [id=fhmsgrkurrkqena67in5, 10s elapsed]
+yandex_compute_instance.app[1]: Still creating... [10s elapsed]
+yandex_compute_instance.app2: Destruction complete after 11s
+yandex_compute_instance.app[1]: Still creating... [20s elapsed]
+yandex_compute_instance.app[1]: Still creating... [30s elapsed]
+yandex_compute_instance.app[1]: Still creating... [40s elapsed]
+yandex_compute_instance.app[1]: Provisioning with 'file'...
+yandex_compute_instance.app[1]: Still creating... [50s elapsed]
+yandex_compute_instance.app[1]: Still creating... [1m0s elapsed]
+yandex_compute_instance.app[1]: Provisioning with 'remote-exec'...
+...
+yandex_compute_instance.app[1]: Creation complete after 1m42s [id=fhmga03s2qu3frlhk0s7]
+yandex_lb_target_group.app_lb_target_group: Modifying... [id=enpint9vuufj268oe7q3]
+yandex_lb_target_group.app_lb_target_group: Modifications complete after 8s [id=enpint9vuufj268oe7q3]
+
+Apply complete! Resources: 1 added, 2 changed, 1 destroyed.
+
+Outputs:
+
+external_ip_address_app = [
+  "178.154.240.24",
+  "178.154.230.155",
+]
+lb_ip_address = 84.201.158.38
+```
+
 </details>
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
