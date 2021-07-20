@@ -672,3 +672,77 @@ lb_ip_address = 84.201.158.38
 </details>
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
+
+
+## Homework #9: terraform-2
+
+- The separate network for the app VM instance is created.
+
+<details><summary>Details</summary>
+
+Create a separate nework for the app VM instance:
+```
+$ cd terraform
+
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.app[0] will be created
+  + resource "yandex_compute_instance" "app" {
+      ...
+    }
+
+  # yandex_vpc_network.app_network will be created
+  + resource "yandex_vpc_network" "app_network" {
+      ...
+    }
+
+  # yandex_vpc_subnet.app_subnet will be created
+  + resource "yandex_vpc_subnet" "app_subnet" {
+      ...
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+
+
+$ terraform apply -auto-approve
+yandex_vpc_network.app_network: Creating...
+yandex_vpc_network.app_network: Creation complete after 2s [id=enpe8ba80a5osb22ggbm]
+yandex_vpc_subnet.app_subnet: Creating...
+yandex_vpc_subnet.app_subnet: Creation complete after 1s [id=e9bni16d9r18hkaofgnc]
+yandex_compute_instance.app[0]: Creating...
+...
+yandex_compute_instance.app[0]: Creation complete after 1m41s [id=fhmm35i78kr6aq00fm98]
+
+Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = [
+  "193.32.218.54",
+]
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 3 destroyed.
+```
+
+</details>
