@@ -5,4 +5,4 @@ image_id                 = "fd88ba04hjbah1vgtcm4"
 subnet_id                = "e9b4gc5qqhfpoe63kt9p"
 private_key_path         = "~/.ssh/appuser"
 public_key_path          = "~/.ssh/appuser.pub"
-instance_count           = 2
+instance_count           = 1
