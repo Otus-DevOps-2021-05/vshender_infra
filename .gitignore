@@ -3,3 +3,8 @@
 .envrc
 yc-svc-key.json
 packer/variables.json
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+*.tfvars
+.terraform/

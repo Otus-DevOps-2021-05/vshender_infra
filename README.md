@@ -324,3 +324,351 @@ $ ../config-scripts/create-reddit-vm.sh
 </details>
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
+
+
+## Homework #8: terraform-1
+
+- The VM isntance was created using Terraform.
+- The output variable for an external IP address was added.
+- The provisioners for the application deployment were added.
+- Input variables were used for the configuration.
+- The network load balancer was created.
+- The second VM instance was created.
+- The `count` parameter was used in order to create two app instances.
+
+<details><summary>Details</summary>
+
+[Yandex.Cloud provider documentation](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs)
+
+Get config for yandex provider:
+```
+$ yc config list
+token: ...
+cloud-id: ...
+folder-id: ...
+compute-default-zone: ru-central1-a
+```
+
+Initialize provider plugins:
+```
+$ cd terraform
+
+$ terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "yandex" (terraform-providers/yandex) 0.35.0...
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+```
+
+See execution plan, showing what actions Terraform would take to apply the current configuration:
+```
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.app will be created
+  + resource "yandex_compute_instance" "app" {
+  ...
+  }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+```
+
+Create a VM instance using terraform:
+```
+$ terraform apply -auto-approve
+yandex_compute_instance.app: Creating...
+yandex_compute_instance.app: Still creating... [10s elapsed]
+yandex_compute_instance.app: Still creating... [20s elapsed]
+yandex_compute_instance.app: Still creating... [30s elapsed]
+yandex_compute_instance.app: Still creating... [40s elapsed]
+yandex_compute_instance.app: Creation complete after 42s [id=fhmcpqriqgm182kto33a]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+$ ls
+main.tf                  terraform.tfstate        terraform.tfstate.backup
+```
+
+Get an external IP address of the created VM using `terraform show` command:
+```
+$ terraform show | grep nat_ip_address
+          nat_ip_address = "178.154.252.33"
+```
+
+Connect to the created VM:
+```
+$ ssh ubuntu@178.154.252.33
+Welcome to Ubuntu 16.04.7 LTS (GNU/Linux 4.4.0-142-generic x86_64)
+...
+```
+
+Add the `external_ip_address_app` output variable and refresh the state:
+```
+$ terraform refresh
+yandex_compute_instance.app: Refreshing state... [id=fhmmi8jnaat1655k0ljq]
+
+Outputs:
+
+external_ip_address_app = 178.154.252.33
+
+$ terraform output
+external_ip_address_app = 178.154.252.33
+
+$ terraform output external_ip_address_app
+178.154.252.33
+```
+
+Add [provisioners](https://www.terraform.io/docs/language/resources/provisioners/syntax.html) for the application deployment and recreate the VM:
+```
+$ terraform taint yandex_compute_instance.app
+Resource instance yandex_compute_instance.app has been marked as tainted.
+
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+yandex_compute_instance.app: Refreshing state... [id=fhmmi8jnaat1655k0ljq]
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.app is tainted, so must be replaced
+-/+ resource "yandex_compute_instance" "app" {
+      ...
+    }
+
+Plan: 1 to add, 0 to change, 1 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+
+$ terraform apply -auto-approve
+yandex_compute_instance.app: Refreshing state... [id=fhmbgbhkre7lfu7mcdl2]
+yandex_compute_instance.app: Destroying... [id=fhmbgbhkre7lfu7mcdl2]
+yandex_compute_instance.app: Still destroying... [id=fhmbgbhkre7lfu7mcdl2, 10s elapsed]
+yandex_compute_instance.app: Destruction complete after 10s
+yandex_compute_instance.app: Creating...
+yandex_compute_instance.app: Still creating... [10s elapsed]
+yandex_compute_instance.app: Still creating... [21s elapsed]
+yandex_compute_instance.app: Still creating... [31s elapsed]
+yandex_compute_instance.app: Still creating... [41s elapsed]
+yandex_compute_instance.app: Provisioning with 'file'...
+yandex_compute_instance.app: Still creating... [51s elapsed]
+yandex_compute_instance.app: Still creating... [1m1s elapsed]
+yandex_compute_instance.app: Provisioning with 'remote-exec'...
+yandex_compute_instance.app (remote-exec): Connecting to remote host via SSH...
+yandex_compute_instance.app (remote-exec):   Host: 178.154.240.24
+yandex_compute_instance.app (remote-exec):   User: ubuntu
+yandex_compute_instance.app (remote-exec):   Password: false
+yandex_compute_instance.app (remote-exec):   Private key: true
+yandex_compute_instance.app (remote-exec):   Certificate: false
+yandex_compute_instance.app (remote-exec):   SSH Agent: false
+yandex_compute_instance.app (remote-exec):   Checking Host Key: false
+yandex_compute_instance.app (remote-exec): Connected!
+...
+yandex_compute_instance.app: Creation complete after 1m46s [id=fhmk1922pqdne0hd2ghg]
+
+Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.240.24
+```
+
+Open http://178.154.240.24:9292/ and check the application.
+
+Use input variables for the configuration and recreate the VM:
+```
+$ terraform destroy -auto-approve
+yandex_compute_instance.app: Refreshing state... [id=fhmk1922pqdne0hd2ghg]
+yandex_compute_instance.app: Destroying... [id=fhmk1922pqdne0hd2ghg]
+yandex_compute_instance.app: Destruction complete after 9s
+
+Destroy complete! Resources: 1 destroyed.
+
+$ terraform apply -auto-approve
+...
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.240.24
+```
+
+Add a network load balancer (see [yandex_lb_network_load_balancer](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/lb_network_load_balancer) and [yandex_lb_target_group](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/lb_target_group)):
+```
+$ terraform apply -auto-approve
+yandex_compute_instance.app: Refreshing state... [id=fhmeo4rot527qnsssigv]
+yandex_lb_target_group.app_lb_target_group: Creating...
+yandex_lb_target_group.app_lb_target_group: Creation complete after 3s [id=enpint9vuufj268oe7q3]
+yandex_lb_network_load_balancer.app_lb: Creating...
+yandex_lb_network_load_balancer.app_lb: Still creating... [10s elapsed]
+yandex_lb_network_load_balancer.app_lb: Creation complete after 18s [id=b7ruppfn9ugmq564gonm]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.240.24
+lb_ip_address = 84.201.158.38
+```
+
+Open http://84.201.158.38/ and check the application.
+
+Add a second VM instance:
+```
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+yandex_compute_instance.app: Refreshing state... [id=fhmeo4rot527qnsssigv]
+yandex_lb_target_group.app_lb_target_group: Refreshing state... [id=enpint9vuufj268oe7q3]
+yandex_lb_network_load_balancer.app_lb: Refreshing state... [id=b7ruppfn9ugmq564gonm]
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.app2 will be created
+  + resource "yandex_compute_instance" "app2" {
+      ...
+    }
+
+  # yandex_lb_target_group.app_lb_target_group will be updated in-place
+  ~ resource "yandex_lb_target_group" "app_lb_target_group" {
+        created_at = "2021-07-18T13:58:38Z"
+        folder_id  = "b1gd4td7jk7gdlac0laf"
+        id         = "enpint9vuufj268oe7q3"
+        labels     = {}
+        name       = "app-lb-target-group"
+        region_id  = "ru-central1"
+
+        target {
+            address   = "10.128.0.18"
+            subnet_id = "e9b4gc5qqhfpoe63kt9p"
+        }
+      + target {
+          + address   = (known after apply)
+          + subnet_id = "e9b4gc5qqhfpoe63kt9p"
+        }
+    }
+
+Plan: 1 to add, 1 to change, 0 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+
+$ terraform apply -auto-approve
+yandex_compute_instance.app: Refreshing state... [id=fhmeo4rot527qnsssigv]
+yandex_lb_target_group.app_lb_target_group: Refreshing state... [id=enpint9vuufj268oe7q3]
+yandex_lb_network_load_balancer.app_lb: Refreshing state... [id=b7ruppfn9ugmq564gonm]
+yandex_compute_instance.app2: Creating...
+yandex_compute_instance.app2: Still creating... [10s elapsed]
+yandex_compute_instance.app2: Still creating... [20s elapsed]
+yandex_compute_instance.app2: Still creating... [30s elapsed]
+yandex_compute_instance.app2: Still creating... [40s elapsed]
+yandex_compute_instance.app2: Provisioning with 'file'...
+yandex_compute_instance.app2: Still creating... [50s elapsed]
+yandex_compute_instance.app2: Still creating... [1m0s elapsed]
+yandex_compute_instance.app2: Provisioning with 'remote-exec'...
+...
+yandex_compute_instance.app2: Creation complete after 1m48s [id=fhmsgrkurrkqena67in5]
+yandex_lb_target_group.app_lb_target_group: Modifying... [id=enpint9vuufj268oe7q3]
+yandex_lb_target_group.app_lb_target_group: Modifications complete after 7s [id=enpint9vuufj268oe7q3]
+
+Apply complete! Resources: 1 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.240.24
+external_ip_address_app2 = 84.201.175.185
+lb_ip_address = 84.201.158.38
+```
+
+Use the `count` parameter to create app instances (see [dynamic Blocks](https://www.terraform.io/docs/language/expressions/dynamic-blocks.html)):
+```
+$ terraform apply -auto-approve
+yandex_compute_instance.app2: Refreshing state... [id=fhmsgrkurrkqena67in5]
+yandex_compute_instance.app[0]: Refreshing state... [id=fhmeo4rot527qnsssigv]
+yandex_lb_target_group.app_lb_target_group: Refreshing state... [id=enpint9vuufj268oe7q3]
+yandex_lb_network_load_balancer.app_lb: Refreshing state... [id=b7ruppfn9ugmq564gonm]
+yandex_compute_instance.app2: Destroying... [id=fhmsgrkurrkqena67in5]
+yandex_compute_instance.app[1]: Creating...
+yandex_compute_instance.app[0]: Modifying... [id=fhmeo4rot527qnsssigv]
+yandex_compute_instance.app[0]: Modifications complete after 3s [id=fhmeo4rot527qnsssigv]
+yandex_compute_instance.app2: Still destroying... [id=fhmsgrkurrkqena67in5, 10s elapsed]
+yandex_compute_instance.app[1]: Still creating... [10s elapsed]
+yandex_compute_instance.app2: Destruction complete after 11s
+yandex_compute_instance.app[1]: Still creating... [20s elapsed]
+yandex_compute_instance.app[1]: Still creating... [30s elapsed]
+yandex_compute_instance.app[1]: Still creating... [40s elapsed]
+yandex_compute_instance.app[1]: Provisioning with 'file'...
+yandex_compute_instance.app[1]: Still creating... [50s elapsed]
+yandex_compute_instance.app[1]: Still creating... [1m0s elapsed]
+yandex_compute_instance.app[1]: Provisioning with 'remote-exec'...
+...
+yandex_compute_instance.app[1]: Creation complete after 1m42s [id=fhmga03s2qu3frlhk0s7]
+yandex_lb_target_group.app_lb_target_group: Modifying... [id=enpint9vuufj268oe7q3]
+yandex_lb_target_group.app_lb_target_group: Modifications complete after 8s [id=enpint9vuufj268oe7q3]
+
+Apply complete! Resources: 1 added, 2 changed, 1 destroyed.
+
+Outputs:
+
+external_ip_address_app = [
+  "178.154.240.24",
+  "178.154.230.155",
+]
+lb_ip_address = 84.201.158.38
+```
+
+</details>
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
