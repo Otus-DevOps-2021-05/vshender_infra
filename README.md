@@ -677,6 +677,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 ## Homework #9: terraform-2
 
 - The separate network for the app VM instance is created.
+- New base images for the DB and the application are created.
 
 <details><summary>Details</summary>
 
@@ -743,6 +744,21 @@ $ terraform destroy -auto-approve
 ...
 
 Destroy complete! Resources: 3 destroyed.
+```
+
+Create base images for the DB and the application:
+```
+$ cd ../packer
+
+$ packer build -var-file=variables.json ./db.json
+...
+==> Builds finished. The artifacts of successful builds are:
+--> yandex: A disk image was created: reddit-db-base-1626779578 (id: fd8cduv3d4pgtgifqsl0) with family name reddit-db-base
+
+$ packer build -var-file=variables.json ./app.json
+...
+==> Builds finished. The artifacts of successful builds are:
+--> yandex: A disk image was created: reddit-app-base-1626779801 (id: fd83k16ogu4j0ku96e60) with family name reddit-app-base
 ```
 
 </details>
