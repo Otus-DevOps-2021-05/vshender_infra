@@ -680,6 +680,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - New base images for the DB and the application are created.
 - The separate VM instances were created for DB and the application.
 - The infrastructure definition was refactored using modules.
+- The `prod` and `stage` infrastructures are created.
 
 <details><summary>Details</summary>
 
@@ -948,6 +949,79 @@ $ terraform destroy -auto-approve
 ...
 
 Destroy complete! Resources: 6 destroyed.
+```
+
+Check the `prod` infrastructure:
+```
+$ cd prod
+
+$ terraform init
+Initializing modules...
+- app in ../modules/app
+- db in ../modules/db
+- vpc in ../modules/vpc
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "null" (hashicorp/null) 3.1.0...
+- Downloading plugin for provider "yandex" (terraform-providers/yandex) 0.35.0...
+
+...
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.220.6
+external_ip_address_db = 178.154.222.215
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+
+```
+
+Check the `stage` infrastructure:
+```
+$ cd ../stage
+
+$ terraform init
+Initializing modules...
+- app in ../modules/app
+- db in ../modules/db
+- vpc in ../modules/vpc
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "null" (hashicorp/null) 3.1.0...
+- Downloading plugin for provider "yandex" (terraform-providers/yandex) 0.35.0...
+
+...
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.221.50
+external_ip_address_db = 178.154.223.253
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+
+$ cd ..
 ```
 
 </details>
