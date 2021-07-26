@@ -681,6 +681,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The separate VM instances were created for DB and the application.
 - The infrastructure definition was refactored using modules.
 - The `prod` and `stage` infrastructures are created.
+- The "s3" backend is used to store terraform state in an object bucket.
 
 <details><summary>Details</summary>
 
@@ -1022,6 +1023,95 @@ $ terraform destroy -auto-approve
 Destroy complete! Resources: 6 destroyed.
 
 $ cd ..
+```
+
+Create a bucket for tfstate storage:
+```
+$ terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "yandex" (terraform-providers/yandex) 0.35.0...
+
+...
+
+$ terraform apply -auto-approve
+yandex_iam_service_account_static_access_key.sa_static_key: Creating...
+yandex_iam_service_account_static_access_key.sa_static_key: Creation complete after 1s [id=aje6fabk26om8ai3umdt]
+yandex_storage_bucket.tfstate_storage: Creating...
+yandex_storage_bucket.tfstate_storage: Creation complete after 0s [id=otus-tfstate-storage]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+$ cd ..
+
+```
+
+Create `prod` and `stage` infrastructures saving the state in the object bucket:
+```
+$ cd prod
+
+$ terraform init
+terraform init
+Initializing modules...
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+...
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.220.159
+external_ip_address_db = 178.154.220.4
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+
+$ cd ../stage
+
+$ terraform init
+terraform init
+Initializing modules...
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+...
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.221.50
+external_ip_address_db = 178.154.222.132
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+
+$ cd ..
+
+$ aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://otus-tfstate-storage
+2021-07-26 19:49:32        157 prod/terraform.tfstate
+2021-07-26 19:54:05        157 stage/terraform.tfstate
 ```
 
 </details>

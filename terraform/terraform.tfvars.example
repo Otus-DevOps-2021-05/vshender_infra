@@ -1,0 +1,4 @@
+service_account_key_file = "../yc-svc-key.json"
+cloud_id                 = "b1gl05ddrl6bfdapqu15"
+folder_id                = "b1gd4td7jk7gdlac0laf"
+service_account_id       = "ajeg1tbs3ho02l5u4tg0"
