@@ -682,6 +682,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The infrastructure definition was refactored using modules.
 - The `prod` and `stage` infrastructures are created.
 - The "s3" backend is used to store terraform state in an object bucket.
+- The provisioners disabling is implemented.
 
 <details><summary>Details</summary>
 
@@ -1115,3 +1116,5 @@ $ aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://otus
 ```
 
 </details>
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
