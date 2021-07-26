@@ -679,6 +679,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The separate network for the app VM instance is created.
 - New base images for the DB and the application are created.
 - The separate VM instances were created for DB and the application.
+- The infrastructure definition was refactored using modules.
 
 <details><summary>Details</summary>
 
@@ -807,6 +808,142 @@ Open http://178.154.223.251/ and check the application.
 
 Destroy the infrastructure:
 ```
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+```
+
+Install the `app` and `db` modules:
+```
+$ terraform get
+- app in modules/app
+- db in modules/db
+- vpc in modules/vpc
+
+$ tree .terraform
+.terraform
+├── modules
+│   └── modules.json
+└── plugins
+    └── darwin_amd64
+        ├── lock.json
+        ├── terraform-provider-null_v3.1.0_x5
+        └── terraform-provider-yandex_v0.35.0_x4
+
+3 directories, 4 files
+
+$ cat .terraform/modules/modules.json | jq
+{
+  "Modules": [
+    {
+      "Key": "",
+      "Source": "",
+      "Dir": "."
+    },
+    {
+      "Key": "app",
+      "Source": "./modules/app",
+      "Dir": "modules/app"
+    },
+    {
+      "Key": "db",
+      "Source": "./modules/db",
+      "Dir": "modules/db"
+    },
+    {
+      "Key": "vpc",
+      "Source": "./modules/vpc",
+      "Dir": "modules/vpc"
+    }
+  ]
+}
+```
+
+Create VM instances for DB and the application using modules:
+```
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # module.app.null_resource.app_provisioning will be created
+  + resource "null_resource" "app_provisioning" {
+      ...
+    }
+
+  # module.app.yandex_compute_instance.app will be created
+  + resource "yandex_compute_instance" "app" {
+      ...
+    }
+
+  # module.db.null_resource.db_provisioning will be created
+  + resource "null_resource" "db_provisioning" {
+      ...
+    }
+
+  # module.db.yandex_compute_instance.db will be created
+  + resource "yandex_compute_instance" "db" {
+      ...
+    }
+
+  # module.vpc.yandex_vpc_network.app_network will be created
+  + resource "yandex_vpc_network" "app_network" {
+      ...
+    }
+
+  # module.vpc.yandex_vpc_subnet.app_subnet will be created
+  + resource "yandex_vpc_subnet" "app_subnet" {
+     ...
+    }
+
+Plan: 6 to add, 0 to change, 0 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+
+$ terraform apply -auto-approve
+module.vpc.yandex_vpc_network.app_network: Creating...
+module.vpc.yandex_vpc_network.app_network: Creation complete after 2s [id=enp1lqjh39d0bfcr4rq6]
+module.vpc.yandex_vpc_subnet.app_subnet: Creating...
+module.vpc.yandex_vpc_subnet.app_subnet: Creation complete after 1s [id=e9bhs3l0fe3jger5hrqq]
+module.db.yandex_compute_instance.db: Creating...
+module.app.yandex_compute_instance.app: Creating...
+...
+module.app.yandex_compute_instance.app: Creation complete after 42s [id=fhm8fj3ise895bqg0p7p]
+module.db.yandex_compute_instance.db: Creation complete after 43s [id=fhmg874d5t3mkf4bcubq]
+module.db.null_resource.db_provisioning: Creating...
+module.app.null_resource.app_provisioning: Creating...
+module.app.null_resource.app_provisioning: Provisioning with 'file'...
+module.db.null_resource.db_provisioning: Provisioning with 'file'...
+...
+module.app.null_resource.app_provisioning: Provisioning with 'remote-exec'..
+...
+module.db.null_resource.db_provisioning: Provisioning with 'remote-exec'...
+...
+module.db.null_resource.db_provisioning: Creation complete after 28s [id=3645675801631671878]
+...
+module.app.null_resource.app_provisioning: Creation complete after 1m5s [id=2690869919208429348]
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.223.58
+external_ip_address_db = 178.154.223.241
+
 $ terraform destroy -auto-approve
 ...
 

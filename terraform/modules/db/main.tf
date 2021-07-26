@@ -1,8 +1,8 @@
-resource "yandex_compute_instance" "app" {
-  name = "reddit-app"
+resource "yandex_compute_instance" "db" {
+  name = "reddit-db"
 
   labels = {
-    tags = "reddit-app"
+    tags = "reddit-db"
   }
 
   resources {
@@ -12,12 +12,12 @@ resource "yandex_compute_instance" "app" {
 
   boot_disk {
     initialize_params {
-      image_id = var.app_disk_image
+      image_id = var.db_disk_image
     }
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.app_subnet.id
+    subnet_id = var.subnet_id
     nat       = true
   }
 
@@ -26,27 +26,30 @@ resource "yandex_compute_instance" "app" {
   }
 }
 
-resource "null_resource" "app_provisioning" {
+resource "null_resource" "db_provisioning" {
   triggers = {
-    db_ip = yandex_compute_instance.db.network_interface.0.ip_address
+    db_id = yandex_compute_instance.db.id
   }
 
   connection {
     type        = "ssh"
-    host        = yandex_compute_instance.app.network_interface.0.nat_ip_address
+    host        = yandex_compute_instance.db.network_interface.0.nat_ip_address
     user        = "ubuntu"
     agent       = false
     private_key = file(var.private_key_path)
   }
 
   provisioner "file" {
-    content = templatefile("files/puma.service.tmpl", {
+    content = templatefile("${path.module}/files/mongod.conf.tmpl", {
       db_ip = yandex_compute_instance.db.network_interface.0.ip_address
     })
-    destination = "/tmp/puma.service"
+    destination = "/tmp/mongod.conf"
   }
 
   provisioner "remote-exec" {
-    script = "files/deploy.sh"
+    inline = [
+      "sudo mv -f /tmp/mongod.conf /etc/mongod.conf",
+      "sudo systemctl restart mongod"
+    ]
   }
 }
