@@ -678,6 +678,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 
 - The separate network for the app VM instance is created.
 - New base images for the DB and the application are created.
+- The separate VM instances were created for DB and the application.
 
 <details><summary>Details</summary>
 
@@ -759,6 +760,57 @@ $ packer build -var-file=variables.json ./app.json
 ...
 ==> Builds finished. The artifacts of successful builds are:
 --> yandex: A disk image was created: reddit-app-base-1626779801 (id: fd83k16ogu4j0ku96e60) with family name reddit-app-base
+```
+
+Create separate VM instances for DB and the application:
+```
+$ terraform apply -auto-approve
+yandex_vpc_network.app_network: Creating...
+yandex_vpc_network.app_network: Creation complete after 2s [id=enp7grh17psar0uvrnfv]
+yandex_vpc_subnet.app_subnet: Creating...
+yandex_vpc_subnet.app_subnet: Creation complete after 1s [id=e9bkmii0jrolt2fo028f]
+yandex_compute_instance.app: Creating...
+yandex_compute_instance.db: Creating...
+...
+yandex_compute_instance.app: Creation complete after 1m4s [id=fhmk0h7cqspro2ahgsef]
+yandex_compute_instance.db: Still creating... [1m10s elapsed]
+yandex_compute_instance.db: Still creating... [1m20s elapsed]
+yandex_compute_instance.db: Still creating... [1m30s elapsed]
+yandex_compute_instance.db: Creation complete after 1m32s [id=fhmvnjf5m9sif3j00c7p]
+null_resource.app_provisioning: Creating...
+null_resource.db_provisioning: Creating...
+...
+null_resource.app_provisioning: Still creating... [30s elapsed]
+null_resource.db_provisioning: Still creating... [30s elapsed]
+null_resource.app_provisioning: Creation complete after 30s [id=6623979293027793107]
+null_resource.db_provisioning: Provisioning with 'remote-exec'...
+null_resource.db_provisioning (remote-exec): Connecting to remote host via SSH...
+null_resource.db_provisioning (remote-exec):   Host: 178.154.223.159
+null_resource.db_provisioning (remote-exec):   User: ubuntu
+null_resource.db_provisioning (remote-exec):   Password: false
+null_resource.db_provisioning (remote-exec):   Private key: true
+null_resource.db_provisioning (remote-exec):   Certificate: false
+null_resource.db_provisioning (remote-exec):   SSH Agent: false
+null_resource.db_provisioning (remote-exec):   Checking Host Key: false
+null_resource.db_provisioning (remote-exec): Connected!
+null_resource.db_provisioning: Creation complete after 32s [id=8790677782413716257]
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.223.251
+
+```
+
+Open http://178.154.223.251/ and check the application.
+
+Destroy the infrastructure:
+```
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
 ```
 
 </details>
