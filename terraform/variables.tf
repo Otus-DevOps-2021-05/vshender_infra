@@ -3,7 +3,6 @@ variable service_account_key_file {
 }
 
 variable cloud_id {
-  # Описание переменной
   description = "Cloud"
 }
 
@@ -11,34 +10,16 @@ variable folder_id {
   description = "Folder"
 }
 
-variable region_id {
-  description = "Region"
-  default     = "ru-central1"
-}
-
 variable zone {
   description = "Zone"
-  # Значение по умолчанию
-  default = "ru-central1-a"
+  default     = "ru-central1-a"
 }
 
-variable image_id {
-  description = "Disk image"
+variable bucket_name {
+  description = "tfstate storage bucket name"
+  default     = "otus-tfstate-storage"
 }
 
-variable subnet_id {
-  description = "Subnet"
-}
-
-variable private_key_path {
-  description = "Path to the private key used for ssh access"
-}
-
-variable public_key_path {
-  description = "Path to the public key used for ssh access"
-}
-
-variable instance_count {
-  description = "Instance count"
-  default     = 1
+variable service_account_id {
+  description = "Service account ID"
 }

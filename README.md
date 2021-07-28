@@ -672,3 +672,449 @@ lb_ip_address = 84.201.158.38
 </details>
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
+
+
+## Homework #9: terraform-2
+
+- The separate network for the app VM instance is created.
+- New base images for the DB and the application are created.
+- The separate VM instances were created for DB and the application.
+- The infrastructure definition was refactored using modules.
+- The `prod` and `stage` infrastructures are created.
+- The "s3" backend is used to store terraform state in an object bucket.
+- The provisioners disabling is implemented.
+
+<details><summary>Details</summary>
+
+Create a separate nework for the app VM instance:
+```
+$ cd terraform
+
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance.app[0] will be created
+  + resource "yandex_compute_instance" "app" {
+      ...
+    }
+
+  # yandex_vpc_network.app_network will be created
+  + resource "yandex_vpc_network" "app_network" {
+      ...
+    }
+
+  # yandex_vpc_subnet.app_subnet will be created
+  + resource "yandex_vpc_subnet" "app_subnet" {
+      ...
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+
+
+$ terraform apply -auto-approve
+yandex_vpc_network.app_network: Creating...
+yandex_vpc_network.app_network: Creation complete after 2s [id=enpe8ba80a5osb22ggbm]
+yandex_vpc_subnet.app_subnet: Creating...
+yandex_vpc_subnet.app_subnet: Creation complete after 1s [id=e9bni16d9r18hkaofgnc]
+yandex_compute_instance.app[0]: Creating...
+...
+yandex_compute_instance.app[0]: Creation complete after 1m41s [id=fhmm35i78kr6aq00fm98]
+
+Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = [
+  "193.32.218.54",
+]
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 3 destroyed.
+```
+
+Create base images for the DB and the application:
+```
+$ cd ../packer
+
+$ packer build -var-file=variables.json ./db.json
+...
+==> Builds finished. The artifacts of successful builds are:
+--> yandex: A disk image was created: reddit-db-base-1626779578 (id: fd8cduv3d4pgtgifqsl0) with family name reddit-db-base
+
+$ packer build -var-file=variables.json ./app.json
+...
+==> Builds finished. The artifacts of successful builds are:
+--> yandex: A disk image was created: reddit-app-base-1626779801 (id: fd83k16ogu4j0ku96e60) with family name reddit-app-base
+```
+
+Create separate VM instances for DB and the application:
+```
+$ terraform apply -auto-approve
+yandex_vpc_network.app_network: Creating...
+yandex_vpc_network.app_network: Creation complete after 2s [id=enp7grh17psar0uvrnfv]
+yandex_vpc_subnet.app_subnet: Creating...
+yandex_vpc_subnet.app_subnet: Creation complete after 1s [id=e9bkmii0jrolt2fo028f]
+yandex_compute_instance.app: Creating...
+yandex_compute_instance.db: Creating...
+...
+yandex_compute_instance.app: Creation complete after 1m4s [id=fhmk0h7cqspro2ahgsef]
+yandex_compute_instance.db: Still creating... [1m10s elapsed]
+yandex_compute_instance.db: Still creating... [1m20s elapsed]
+yandex_compute_instance.db: Still creating... [1m30s elapsed]
+yandex_compute_instance.db: Creation complete after 1m32s [id=fhmvnjf5m9sif3j00c7p]
+null_resource.app_provisioning: Creating...
+null_resource.db_provisioning: Creating...
+...
+null_resource.app_provisioning: Still creating... [30s elapsed]
+null_resource.db_provisioning: Still creating... [30s elapsed]
+null_resource.app_provisioning: Creation complete after 30s [id=6623979293027793107]
+null_resource.db_provisioning: Provisioning with 'remote-exec'...
+null_resource.db_provisioning (remote-exec): Connecting to remote host via SSH...
+null_resource.db_provisioning (remote-exec):   Host: 178.154.223.159
+null_resource.db_provisioning (remote-exec):   User: ubuntu
+null_resource.db_provisioning (remote-exec):   Password: false
+null_resource.db_provisioning (remote-exec):   Private key: true
+null_resource.db_provisioning (remote-exec):   Certificate: false
+null_resource.db_provisioning (remote-exec):   SSH Agent: false
+null_resource.db_provisioning (remote-exec):   Checking Host Key: false
+null_resource.db_provisioning (remote-exec): Connected!
+null_resource.db_provisioning: Creation complete after 32s [id=8790677782413716257]
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.223.251
+
+```
+
+Open http://178.154.223.251/ and check the application.
+
+Destroy the infrastructure:
+```
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+```
+
+Install the `app` and `db` modules:
+```
+$ terraform get
+- app in modules/app
+- db in modules/db
+- vpc in modules/vpc
+
+$ tree .terraform
+.terraform
+├── modules
+│   └── modules.json
+└── plugins
+    └── darwin_amd64
+        ├── lock.json
+        ├── terraform-provider-null_v3.1.0_x5
+        └── terraform-provider-yandex_v0.35.0_x4
+
+3 directories, 4 files
+
+$ cat .terraform/modules/modules.json | jq
+{
+  "Modules": [
+    {
+      "Key": "",
+      "Source": "",
+      "Dir": "."
+    },
+    {
+      "Key": "app",
+      "Source": "./modules/app",
+      "Dir": "modules/app"
+    },
+    {
+      "Key": "db",
+      "Source": "./modules/db",
+      "Dir": "modules/db"
+    },
+    {
+      "Key": "vpc",
+      "Source": "./modules/vpc",
+      "Dir": "modules/vpc"
+    }
+  ]
+}
+```
+
+Create VM instances for DB and the application using modules:
+```
+$ terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # module.app.null_resource.app_provisioning will be created
+  + resource "null_resource" "app_provisioning" {
+      ...
+    }
+
+  # module.app.yandex_compute_instance.app will be created
+  + resource "yandex_compute_instance" "app" {
+      ...
+    }
+
+  # module.db.null_resource.db_provisioning will be created
+  + resource "null_resource" "db_provisioning" {
+      ...
+    }
+
+  # module.db.yandex_compute_instance.db will be created
+  + resource "yandex_compute_instance" "db" {
+      ...
+    }
+
+  # module.vpc.yandex_vpc_network.app_network will be created
+  + resource "yandex_vpc_network" "app_network" {
+      ...
+    }
+
+  # module.vpc.yandex_vpc_subnet.app_subnet will be created
+  + resource "yandex_vpc_subnet" "app_subnet" {
+     ...
+    }
+
+Plan: 6 to add, 0 to change, 0 to destroy.
+
+------------------------------------------------------------------------
+
+Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+can't guarantee that exactly these actions will be performed if
+"terraform apply" is subsequently run.
+
+$ terraform apply -auto-approve
+module.vpc.yandex_vpc_network.app_network: Creating...
+module.vpc.yandex_vpc_network.app_network: Creation complete after 2s [id=enp1lqjh39d0bfcr4rq6]
+module.vpc.yandex_vpc_subnet.app_subnet: Creating...
+module.vpc.yandex_vpc_subnet.app_subnet: Creation complete after 1s [id=e9bhs3l0fe3jger5hrqq]
+module.db.yandex_compute_instance.db: Creating...
+module.app.yandex_compute_instance.app: Creating...
+...
+module.app.yandex_compute_instance.app: Creation complete after 42s [id=fhm8fj3ise895bqg0p7p]
+module.db.yandex_compute_instance.db: Creation complete after 43s [id=fhmg874d5t3mkf4bcubq]
+module.db.null_resource.db_provisioning: Creating...
+module.app.null_resource.app_provisioning: Creating...
+module.app.null_resource.app_provisioning: Provisioning with 'file'...
+module.db.null_resource.db_provisioning: Provisioning with 'file'...
+...
+module.app.null_resource.app_provisioning: Provisioning with 'remote-exec'..
+...
+module.db.null_resource.db_provisioning: Provisioning with 'remote-exec'...
+...
+module.db.null_resource.db_provisioning: Creation complete after 28s [id=3645675801631671878]
+...
+module.app.null_resource.app_provisioning: Creation complete after 1m5s [id=2690869919208429348]
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.223.58
+external_ip_address_db = 178.154.223.241
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+```
+
+Check the `prod` infrastructure:
+```
+$ cd prod
+
+$ terraform init
+Initializing modules...
+- app in ../modules/app
+- db in ../modules/db
+- vpc in ../modules/vpc
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "null" (hashicorp/null) 3.1.0...
+- Downloading plugin for provider "yandex" (terraform-providers/yandex) 0.35.0...
+
+...
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.220.6
+external_ip_address_db = 178.154.222.215
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+
+```
+
+Check the `stage` infrastructure:
+```
+$ cd ../stage
+
+$ terraform init
+Initializing modules...
+- app in ../modules/app
+- db in ../modules/db
+- vpc in ../modules/vpc
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "null" (hashicorp/null) 3.1.0...
+- Downloading plugin for provider "yandex" (terraform-providers/yandex) 0.35.0...
+
+...
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.221.50
+external_ip_address_db = 178.154.223.253
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+
+$ cd ..
+```
+
+Create a bucket for tfstate storage:
+```
+$ terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Checking for available provider plugins...
+- Downloading plugin for provider "yandex" (terraform-providers/yandex) 0.35.0...
+
+...
+
+$ terraform apply -auto-approve
+yandex_iam_service_account_static_access_key.sa_static_key: Creating...
+yandex_iam_service_account_static_access_key.sa_static_key: Creation complete after 1s [id=aje6fabk26om8ai3umdt]
+yandex_storage_bucket.tfstate_storage: Creating...
+yandex_storage_bucket.tfstate_storage: Creation complete after 0s [id=otus-tfstate-storage]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+$ cd ..
+
+```
+
+Create `prod` and `stage` infrastructures saving the state in the object bucket:
+```
+$ cd prod
+
+$ terraform init
+terraform init
+Initializing modules...
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+...
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.220.159
+external_ip_address_db = 178.154.220.4
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+
+$ cd ../stage
+
+$ terraform init
+terraform init
+Initializing modules...
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+...
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.221.50
+external_ip_address_db = 178.154.222.132
+
+$ terraform destroy -auto-approve
+...
+
+Destroy complete! Resources: 6 destroyed.
+
+$ cd ..
+
+$ aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://otus-tfstate-storage
+2021-07-26 19:49:32        157 prod/terraform.tfstate
+2021-07-26 19:54:05        157 stage/terraform.tfstate
+```
+
+</details>
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
