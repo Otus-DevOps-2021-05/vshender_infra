@@ -1124,6 +1124,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 
 - Ansible was installed.
 - A staging environment was created.
+- The inventory file was added.
 
 <details><summary>Details</summary>
 
@@ -1162,5 +1163,27 @@ external_ip_address_app = 178.154.205.41
 external_ip_address_db = 178.154.220.6
 
 $ cd ../../ansible
+
+```
+
+Check the inventory file:
+```
+$ ansible appserver -i ./inventory -m ping
+appserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+
+$ ansible dbserver -i ./inventory -m ping
+dbserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
 
 ```
