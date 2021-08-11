@@ -1118,3 +1118,20 @@ $ aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://otus
 </details>
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
+
+
+## Homework #10: ansible-1
+
+- Ansible was installed.
+
+<details><summary>Details</summary>
+
+Install Ansible:
+```
+$ cd ansible
+
+$ pip install -r requirements.txt
+...
+Successfully installed MarkupSafe-2.0.1 ansible-4.4.0 ansible-core-2.11.3 cffi-1.14.6 cryptography-3.4.7 jinja2-3.0.1 packaging-21.0 pycparser-2.20 pyparsing-2.4.7 resolvelib-0.5.4
+
+```
