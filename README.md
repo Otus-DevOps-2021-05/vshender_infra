@@ -1125,6 +1125,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - Ansible was installed.
 - A staging environment was created.
 - The inventory file was added.
+- Ansible was configured using `ansible.cfg` file.
 
 <details><summary>Details</summary>
 
@@ -1185,5 +1186,17 @@ dbserver | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
+
+```
+
+Check the configuration from `ansible.cfg` file:
+```
+$ ansible appserver -m command -a uptime
+appserver | CHANGED | rc=0 >>
+ 17:53:14 up  1:11,  1 user,  load average: 0.16, 0.03, 0.01
+
+$ ansible dbserver -m command -a uptime
+dbserver | CHANGED | rc=0 >>
+ 17:53:20 up  1:11,  1 user,  load average: 0.00, 0.00, 0.00
 
 ```
