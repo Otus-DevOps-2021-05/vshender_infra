@@ -1123,6 +1123,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 ## Homework #10: ansible-1
 
 - Ansible was installed.
+- A staging environment was created.
 
 <details><summary>Details</summary>
 
@@ -1133,5 +1134,33 @@ $ cd ansible
 $ pip install -r requirements.txt
 ...
 Successfully installed MarkupSafe-2.0.1 ansible-4.4.0 ansible-core-2.11.3 cffi-1.14.6 cryptography-3.4.7 jinja2-3.0.1 packaging-21.0 pycparser-2.20 pyparsing-2.4.7 resolvelib-0.5.4
+
+```
+
+Create a staging environment:
+```
+$ cd ../terraform
+
+$ terraform apply -auto-approve
+yandex_iam_service_account_static_access_key.sa_static_key: Creating...
+yandex_iam_service_account_static_access_key.sa_static_key: Creation complete after 2s [id=aje1apk11aev29omkkfm]
+yandex_storage_bucket.tfstate_storage: Creating...
+yandex_storage_bucket.tfstate_storage: Creation complete after 1s [id=otus-tfstate-storage]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+$ cd stage
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.205.41
+external_ip_address_db = 178.154.220.6
+
+$ cd ../../ansible
 
 ```
