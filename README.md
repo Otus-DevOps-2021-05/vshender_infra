@@ -1126,6 +1126,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - A staging environment was created.
 - The inventory file was added.
 - Ansible was configured using `ansible.cfg` file.
+- Host groups were added.
 
 <details><summary>Details</summary>
 
@@ -1198,5 +1199,18 @@ appserver | CHANGED | rc=0 >>
 $ ansible dbserver -m command -a uptime
 dbserver | CHANGED | rc=0 >>
  17:53:20 up  1:11,  1 user,  load average: 0.00, 0.00, 0.00
+
+```
+
+Check the host group:
+```
+$ ansible app -m ping
+appserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
 
 ```
