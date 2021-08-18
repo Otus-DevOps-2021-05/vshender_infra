@@ -1128,6 +1128,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - Ansible was configured using `ansible.cfg` file.
 - Host groups were added.
 - The YAML inventory file was added.
+- The servers' components were checked.
 
 <details><summary>Details</summary>
 
@@ -1232,5 +1233,59 @@ dbserver | SUCCESS => {
     },
     "changed": false,
     "ping": "pong"
+}
+```
+
+Check the servers' components:
+```
+$ ansible app -m command -a 'ruby -v'
+appserver | CHANGED | rc=0 >>
+ruby 2.3.1p112 (2016-04-26) [x86_64-linux-gnu]
+
+$ ansible app -m command -a 'bundler -v'
+appserver | CHANGED | rc=0 >>
+Bundler version 1.11.2
+
+$ ansible app -m command -a 'ruby -v; bundler -v'
+appserver | FAILED | rc=1 >>
+ruby: invalid option -;  (-h will show valid options) (RuntimeError)non-zero return code
+
+$ ansible app -m shell -a 'ruby -v; bundler -v'
+appserver | CHANGED | rc=0 >>
+ruby 2.3.1p112 (2016-04-26) [x86_64-linux-gnu]
+Bundler version 1.11.2
+
+$ ansible db -m command -a 'systemctl status mongod'
+dbserver | CHANGED | rc=0 >>
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/lib/systemd/system/mongod.service; enabled; vendor preset: enabled)
+   Active: active (running) since Wed 2021-08-11 16:42:04 UTC; 6 days ago
+     Docs: https://docs.mongodb.org/manual
+ Main PID: 808 (mongod)
+   CGroup: /system.slice/mongod.service
+           └─808 /usr/bin/mongod --config /etc/mongod.conf
+
+$ ansible db -m systemd -a name=mongod
+dbserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "name": "mongod",
+    "status": {
+        ...
+    }
+}
+
+$ ansible db -m service -a name=mongod
+dbserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "name": "mongod",
+    "status": {
+        ...
+    }
 }
 ```
