@@ -1118,3 +1118,228 @@ $ aws --endpoint-url=https://storage.yandexcloud.net s3 ls --recursive s3://otus
 </details>
 
 In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
+
+
+## Homework #10: ansible-1
+
+- Ansible was installed.
+- A staging environment was created.
+- The inventory file was added.
+- Ansible was configured using `ansible.cfg` file.
+- Host groups were added.
+- The YAML inventory file was added.
+- The servers' components were checked.
+- The application repository was cloned to the app server.
+- The application cloning playbook was added.
+- The [dynamic inventory](https://nklya.medium.com/%D0%B4%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D0%B8%D0%BD%D0%B2%D0%B5%D0%BD%D1%82%D0%BE%D1%80%D0%B8-%D0%B2-ansible-9ee880d540d6) was added.
+
+<details><summary>Details</summary>
+
+Install Ansible:
+```
+$ cd ansible
+
+$ pip install -r requirements.txt
+...
+Successfully installed MarkupSafe-2.0.1 ansible-4.4.0 ansible-core-2.11.3 cffi-1.14.6 cryptography-3.4.7 jinja2-3.0.1 packaging-21.0 pycparser-2.20 pyparsing-2.4.7 resolvelib-0.5.4
+
+```
+
+Create a staging environment:
+```
+$ cd ../terraform
+
+$ terraform apply -auto-approve
+yandex_iam_service_account_static_access_key.sa_static_key: Creating...
+yandex_iam_service_account_static_access_key.sa_static_key: Creation complete after 2s [id=aje1apk11aev29omkkfm]
+yandex_storage_bucket.tfstate_storage: Creating...
+yandex_storage_bucket.tfstate_storage: Creation complete after 1s [id=otus-tfstate-storage]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+$ cd stage
+
+$ terraform apply -auto-approve
+...
+
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+external_ip_address_app = 178.154.205.41
+external_ip_address_db = 178.154.220.6
+
+$ cd ../../ansible
+
+```
+
+Check the inventory file:
+```
+$ ansible appserver -i ./inventory -m ping
+appserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+
+$ ansible dbserver -i ./inventory -m ping
+dbserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+
+```
+
+Check the configuration from `ansible.cfg` file:
+```
+$ ansible appserver -m command -a uptime
+appserver | CHANGED | rc=0 >>
+ 17:53:14 up  1:11,  1 user,  load average: 0.16, 0.03, 0.01
+
+$ ansible dbserver -m command -a uptime
+dbserver | CHANGED | rc=0 >>
+ 17:53:20 up  1:11,  1 user,  load average: 0.00, 0.00, 0.00
+
+```
+
+Check the host group:
+```
+$ ansible app -m ping
+appserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+
+```
+
+Check the YAML inventory:
+```
+$ ansible all -i inventory -m ping
+appserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+dbserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+Check the servers' components:
+```
+$ ansible app -m command -a 'ruby -v'
+appserver | CHANGED | rc=0 >>
+ruby 2.3.1p112 (2016-04-26) [x86_64-linux-gnu]
+
+$ ansible app -m command -a 'bundler -v'
+appserver | CHANGED | rc=0 >>
+Bundler version 1.11.2
+
+$ ansible app -m command -a 'ruby -v; bundler -v'
+appserver | FAILED | rc=1 >>
+ruby: invalid option -;  (-h will show valid options) (RuntimeError)non-zero return code
+
+$ ansible app -m shell -a 'ruby -v; bundler -v'
+appserver | CHANGED | rc=0 >>
+ruby 2.3.1p112 (2016-04-26) [x86_64-linux-gnu]
+Bundler version 1.11.2
+
+$ ansible db -m command -a 'systemctl status mongod'
+dbserver | CHANGED | rc=0 >>
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/lib/systemd/system/mongod.service; enabled; vendor preset: enabled)
+   Active: active (running) since Wed 2021-08-11 16:42:04 UTC; 6 days ago
+     Docs: https://docs.mongodb.org/manual
+ Main PID: 808 (mongod)
+   CGroup: /system.slice/mongod.service
+           └─808 /usr/bin/mongod --config /etc/mongod.conf
+
+$ ansible db -m systemd -a name=mongod
+dbserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "name": "mongod",
+    "status": {
+        ...
+    }
+}
+
+$ ansible db -m service -a name=mongod
+dbserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "name": "mongod",
+    "status": {
+        ...
+    }
+}
+```
+
+Clone the application repository:
+```
+$ ansible app -m git -a 'repo=https://github.com/express42/reddit.git dest=/home/ubuntu/reddit'
+appserver | SUCCESS => {
+    "after": "5c217c565c1122c5343dc0514c116ae816c17ca2",
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "before": "5c217c565c1122c5343dc0514c116ae816c17ca2",
+    "changed": false,
+    "remote_url_changed": false
+}
+```
+
+Check the application cloning playbook:
+```
+$ ansible-playbook clone.yaml
+
+PLAY [Clone] *****************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************
+ok: [appserver]
+
+TASK [Clone repo] ************************************************************************************************
+ok: [appserver]
+
+PLAY RECAP *******************************************************************************************************
+appserver                  : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+Check the dynamic inventory (uncomment the dynamic inventory file usage in `ansible.cfg`):
+```
+$ ansible all -m ping
+178.154.205.41 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+178.154.220.6 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
