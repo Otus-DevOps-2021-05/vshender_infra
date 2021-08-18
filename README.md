@@ -1127,6 +1127,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The inventory file was added.
 - Ansible was configured using `ansible.cfg` file.
 - Host groups were added.
+- The YAML inventory file was added.
 
 <details><summary>Details</summary>
 
@@ -1213,4 +1214,23 @@ appserver | SUCCESS => {
     "ping": "pong"
 }
 
+```
+
+Check the YAML inventory:
+```
+$ ansible all -i inventory -m ping
+appserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+dbserver | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
 ```
