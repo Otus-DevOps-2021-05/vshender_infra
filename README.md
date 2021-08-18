@@ -1130,6 +1130,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The YAML inventory file was added.
 - The servers' components were checked.
 - The application repository was cloned to the app server.
+- The application cloning playbook was added.
 
 <details><summary>Details</summary>
 
@@ -1303,4 +1304,20 @@ appserver | SUCCESS => {
     "changed": false,
     "remote_url_changed": false
 }
+```
+
+Check the application cloning playbook:
+```
+$ ansible-playbook clone.yaml
+
+PLAY [Clone] *****************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************
+ok: [appserver]
+
+TASK [Clone repo] ************************************************************************************************
+ok: [appserver]
+
+PLAY RECAP *******************************************************************************************************
+appserver                  : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
