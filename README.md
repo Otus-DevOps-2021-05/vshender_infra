@@ -1131,6 +1131,7 @@ In order to check the solution, you can see [the CI job result](https://github.c
 - The servers' components were checked.
 - The application repository was cloned to the app server.
 - The application cloning playbook was added.
+- The [dynamic inventory](https://nklya.medium.com/%D0%B4%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D0%B8%D0%BD%D0%B2%D0%B5%D0%BD%D1%82%D0%BE%D1%80%D0%B8-%D0%B2-ansible-9ee880d540d6) was added.
 
 <details><summary>Details</summary>
 
@@ -1321,3 +1322,24 @@ ok: [appserver]
 PLAY RECAP *******************************************************************************************************
 appserver                  : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
+
+Check the dynamic inventory (uncomment the dynamic inventory file usage in `ansible.cfg`):
+```
+$ ansible all -m ping
+178.154.205.41 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+178.154.220.6 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+In order to check the solution, you can see [the CI job result](https://github.com/Otus-DevOps-2021-05/vshender_infra/actions/workflows/run-tests.yml).
